@@ -134,35 +134,27 @@ int main(int argc, char* argv[])
 
     while (!fila.empty() && !achou)
     {     
-        #pragma omp parallel
+        #pragma omp parallel // Não sei porque tem que ser aqui, mas tem
         {
             deque<cel> fila_aux;
             long unsigned int f = fila.size();
             
-            #pragma omp for reduction(||:achou) schedule(dynamic)
+            #pragma omp for schedule(dynamic) //se o schedule for default ou static, não funciona metadade das vezes por alguma razão
             for (long unsigned int c = 0; c < f; c++)
             {
                 cel cl; 
-                bool ok = true;
                 
                 #pragma omp critical
                 {
-                    try
-                    {
-                        cl = fila.at(0);
-                    }
-                    catch(const std::out_of_range& e)
-                    {
-                        ok = false;
-                    }
-                    if(ok)
-                        fila.pop_front();
+                    cl = fila.front();
+                    fila.pop_front();
                 }
 
                 if (cl.i == destino.i && cl.j == destino.j)
                     achou = true;
+                    //se desse para dar break no openMP, seria aqui
                     
-                else if(ok)
+                else
                 {
                     for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual em sentido horario
                     {
@@ -179,11 +171,8 @@ int main(int argc, char* argv[])
                 }
             }
 
-            if(!achou)
-            {
-                #pragma omp critical
-                fila.insert(fila.end(), fila_aux.begin(), fila_aux.end());
-            }
+            #pragma omp critical
+            fila.insert(fila.end(), fila_aux.begin(), fila_aux.end());
         }
     }
     
