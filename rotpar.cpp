@@ -1,9 +1,11 @@
 //Grupo: Daniel Carvalho de Oliveira
+//SO utilizado: MX Linux 19.2 (debian-based)
 //Compilação: g++ rotpar.cpp -o rotpar -fopenmp -Wall
 
 #include <iostream>
 #include <fstream>
 #include <deque>
+#include <vector>
 #include <climits>
 #include <omp.h>
 
@@ -67,6 +69,9 @@ cel verifica_viz(int i, cel cl, const int m, const int n)
     return vz;
 }
 
+//Declaração de reduçao do openmp pelo usuario, nesse caso uma uniao de vetores 
+#pragma omp declare reduction (merge : std::vector<cel> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+
 int main(int argc, char* argv[])
 {
     int m, n, ** grid = NULL; // Declaração da matriz e suas variaveis
@@ -76,24 +81,18 @@ int main(int argc, char* argv[])
     ifstream entrada;
     ofstream saida;
     cel origem, destino;
-    deque <cel> fila, caminho;
+    deque <cel> caminho;
+    vector <cel> fila;
 
     entrada.open(argv[1]);
     
-    //Aloca o espaço na memoria da matriz dinamicamente
+    //Aloca o espaço na memoria da matriz
     entrada >> m;
     entrada >> n;
     grid = new int*[m];
-    if (m)
+    for (int i = 0; i < m; ++i)
     {
-        grid[0] = new int[m * n];
-        for (int i = 0; i < m; i++)
-            grid[i] = grid[0] + i * n;
-    }
-    else
-    {
-        cout << "Insira um valor valido para as linhas ou colunas" << endl;
-        return 0;
+        grid[i] = new int[n];
     }
     
     //Inicializa a matriz com o valor de INT_MAX em suas celulas
@@ -134,54 +133,43 @@ int main(int argc, char* argv[])
 
     while (!fila.empty() && !achou)
     {     
-        #pragma omp parallel // Não sei porque tem que ser aqui, mas tem
+        long unsigned int f = fila.size();
+        vector<cel> fila_aux;
+        
+        #pragma omp parallel for reduction(merge:fila_aux)
+        for (long unsigned int c = 0; c < f; c++)
         {
-            deque<cel> fila_aux;
-            long unsigned int f = fila.size();
+            cel cl; 
+            cl = fila.at(c);
             
-            #pragma omp for schedule(dynamic) //se o schedule for default ou static, não funciona metadade das vezes por alguma razão
-            for (long unsigned int c = 0; c < f; c++)
-            {
-                cel cl; 
+            if (cl.i == destino.i && cl.j == destino.j)
+                achou = true;
                 
-                #pragma omp critical
+            else
+            {
+                for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual em sentido horario
                 {
-                    cl = fila.front();
-                    fila.pop_front();
-                }
+                    cel viz;
+                    viz = verifica_viz(i, cl, m, n);
 
-                if (cl.i == destino.i && cl.j == destino.j)
-                    achou = true;
-                    //se desse para dar break no openMP, seria aqui
-                    
-                else
-                {
-                    for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual em sentido horario
-                    {
-                        cel viz;
-                        viz = verifica_viz(i, cl, m, n);
-
-                        if (viz.i > -1 && viz.j > -1)
-                            if (grid[viz.i][viz.j] == inf)
-                            {
-                                grid[viz.i][viz.j] = grid[cl.i][cl.j] + 1;
-                                fila_aux.push_back(viz);
-                            }
-                    }
+                    if (viz.i > -1 && viz.j > -1)
+                        if (grid[viz.i][viz.j] == inf)
+                        {
+                            grid[viz.i][viz.j] = grid[cl.i][cl.j] + 1;
+                            fila_aux.push_back(viz);
+                        }
                 }
             }
-
-            #pragma omp critical
-            fila.insert(fila.end(), fila_aux.begin(), fila_aux.end());
         }
+        fila = fila_aux;
     }
     
     if (!fila.empty())
         fila.clear(); // Limpa a fila usada na primeira parte do algoritmo
-    fila = deque<cel>(); // Desaloca o espaço usado por essa mesma fila 
+    fila = vector<cel>(); // Desaloca o espaço usado por essa mesma fila 
     
 
-    // Algoritmo ( fase de backtracking)
+    // Algoritmo (fase de backtracking)
     if (achou)
     {
         cel cl;
