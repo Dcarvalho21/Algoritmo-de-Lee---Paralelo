@@ -1,6 +1,6 @@
-//Grupo: Daniel Carvalho de Oliveira
-//SO utilizado: MX Linux 19.2 (debian-based)
-//Compilação: g++ rotpar.cpp -o rotpar -fopenmp -Wall
+// Grupo: Daniel Carvalho de Oliveira
+// SO utilizado: MX Linux 19.2 (debian-based)
+// Compilação: g++ rotpar.cpp -o rotpar -fopenmp -Wall
 
 #include <iostream>
 #include <fstream>
@@ -12,7 +12,7 @@
 #define inf INT_MAX
 using namespace std;
 
-//Define a estrutura celula, cada celula contem a posição de uma celula do grid
+// Define a estrutura celula, cada celula contem a posição de uma celula do grid
 class cel
 {
     public:
@@ -20,8 +20,8 @@ class cel
         int j;
 };
 
-//Verifica se o vizinho de uma celula existe e retorna a celula vizinha caso sim,
-//caso não retorna uma celula com -1 em suas posições
+// Verifica se o vizinho de uma celula existe e retorna a celula vizinha caso sim,
+// caso não retorna uma celula com -1 em suas posições
 cel verifica_viz(int i, cel cl, const int m, const int n)
 {
     cel vz;
@@ -69,7 +69,7 @@ cel verifica_viz(int i, cel cl, const int m, const int n)
     return vz;
 }
 
-//Declaração de reduçao do openmp pelo usuario, nesse caso uma uniao de vetores 
+// Declaração de redução do openmp pelo usuário, nesse caso uma união de vetores 
 #pragma omp declare reduction (merge : std::vector<cel> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
 
 int main(int argc, char* argv[])
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
     entrada.open(argv[1]);
     
-    //Aloca o espaço na memoria da matriz
+    // Aloca o espaço na memoria da matriz
     entrada >> m;
     entrada >> n;
     grid = new int*[m];
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
         grid[i] = new int[n];
     }
     
-    //Inicializa a matriz com o valor de INT_MAX em suas celulas
+    // Inicializa a matriz com o valor de INT_MAX em suas celulas
     for (int i = 0; i < m; i++)
         for (int j = 0; j < n; j++)
             grid[i][j] = inf;
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     entrada >> destino.i;
     entrada >> destino.j;
     
-    //Le e coloca os obstaculos no grid
+    // Lê e coloca os obstáculos no grid
     entrada >> obstaculos;
     for (int k = 0; k < obstaculos; k++)
     {
@@ -126,9 +126,9 @@ int main(int argc, char* argv[])
     
     entrada.close();
 
-    tini = omp_get_wtime(); //Começa a contar o tempo de execução
+    tini = omp_get_wtime(); // Começa a contar o tempo de execução
 
-    //Algoritmo (fase de expansão)
+    // Algoritmo (fase de expansão)
     fila.push_back(origem);
 
     while (!fila.empty() && !achou)
@@ -155,13 +155,13 @@ int main(int argc, char* argv[])
                     if (viz.i > -1 && viz.j > -1)
                         if (grid[viz.i][viz.j] == inf)
                         {
-                            grid[viz.i][viz.j] = grid[cl.i][cl.j] + 1;
-                            fila_aux.push_back(viz);
+                            grid[viz.i][viz.j] = grid[cl.i][cl.j] + 1; // Atualiza o valor da distância da célula no grid
+                            fila_aux.push_back(viz); // Insere o vizinho na lista de celulas a serem visitadas
                         }
                 }
             }
         }
-        fila = fila_aux;
+        fila = fila_aux; // Aumenta o nível da expasão
     }
     
     if (!fila.empty())
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
         
         while(cl.i != origem.i || cl.j != origem.j)
         {
-            for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual em sentido horario
+            for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual
             {
                 cel viz;
                 viz = verifica_viz(i, cl, m, n);
@@ -187,17 +187,17 @@ int main(int argc, char* argv[])
                     if (grid[viz.i][viz.j] == grid[cl.i][cl.j] - 1)
                     {
                         cl = viz;
-                        caminho.push_back(viz);
-                        i = 4; //Para de checar os vizinhos da celula atual quando achar o certo
+                        caminho.push_back(viz); // Monta o caminho da celula destino à celula origem
+                        i = 4; // Para de checar os vizinhos da celula atual quando achar o certo
                     }
             }
         }
         
-        //Termina de contar o tempo de execução e imprime ele na saída padrão
+        // Termina de contar o tempo de execução e imprime ele na saída padrão
         tfin = omp_get_wtime();
         cout << "Tempo de execução (paralelo): " << tfin - tini << "s" << endl;
         
-        //Coloca o resultado do algortimo no arquivo de saida informado
+        // Coloca o resultado do algortimo no arquivo de saída informado
         saida.open(argv[2]);
         saida << grid[destino.i][destino.j] << endl;
         while (!caminho.empty())
