@@ -1,5 +1,6 @@
 //Grupo: Daniel Carvalho de Oliveira
-//Compilação: g++ rotpar.cpp -o rotpar -fopenmp -Wall
+//SO utilizado: MX Linux 19.2 (debian-based)
+//Compilação: g++ rotseq.cpp -o rotseq -fopenmp -Wall
 
 #include <iostream>
 #include <fstream>
@@ -80,20 +81,13 @@ int main(int argc, char* argv[])
 
     entrada.open(argv[1]);
     
-    //Aloca o espaço na memoria da matriz dinamicamente
+    //Aloca o espaço na memoria da matriz
     entrada >> m;
     entrada >> n;
     grid = new int*[m];
-    if (m)
+    for (int i = 0; i < m; ++i)
     {
-        grid[0] = new int[m * n];
-        for (int i = 0; i < m; i++)
-            grid[i] = grid[0] + i * n;
-    }
-    else
-    {
-        cout << "Insira um valor valido para as linhas ou colunas" << endl;
-        return 0;
+        grid[i] = new int[n];
     }
     
     //Inicializa a matriz com o valor de INT_MAX em suas celulas
@@ -131,7 +125,6 @@ int main(int argc, char* argv[])
 
     //Algoritmo (fase de expansão)
     fila.emplace_back(origem);
-
     while (!fila.empty() && !achou)
     {
         cl = fila.front();
@@ -142,7 +135,7 @@ int main(int argc, char* argv[])
         
         else
         {
-            for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual em sentido horario
+            for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual
             {
                 viz = verifica_viz(i, cl, m, n);
                 
@@ -156,7 +149,8 @@ int main(int argc, char* argv[])
         }
     }
     
-    fila.clear(); // Limpa a fila usada na primeira parte do algoritmo
+    if(!fila.empty())
+        fila.clear(); // Limpa a fila usada na primeira parte do algoritmo
     fila = deque<cel>(); // Desaloca o espaço usado por essa mesma fila 
 
     // Algoritmo (fase de backtracking)
