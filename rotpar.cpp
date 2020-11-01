@@ -1,5 +1,6 @@
 // Grupo: Daniel Carvalho de Oliveira
 // SO utilizado: MX Linux 19.2 (debian-based)
+// Compilador utilizado: g++ 8.3.0
 // Compilação: g++ rotpar.cpp -o rotpar -fopenmp -Wall
 
 #include <iostream>
@@ -147,7 +148,7 @@ int main(int argc, char* argv[])
                 
             else
             {
-                for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual em sentido horario
+                for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula
                 {
                     cel viz;
                     viz = verifica_viz(i, cl, m, n);
@@ -161,7 +162,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        fila = fila_aux; // Aumenta o nível da expasão
+        fila = fila_aux; // Passa para o próximo nível de expansão
     }
     
     if (!fila.empty())
@@ -178,7 +179,7 @@ int main(int argc, char* argv[])
         
         while(cl.i != origem.i || cl.j != origem.j)
         {
-            for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula atual
+            for (int i = 0; i < 4; i++) // Verifica os vizinhos da celula
             {
                 cel viz;
                 viz = verifica_viz(i, cl, m, n);
